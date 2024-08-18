@@ -12,8 +12,8 @@ Terre is an interactive, time-traveling application that allows users to explore
 ## Tech Stack
 
 - **Backend:** Node.js - Handles server-side logic and data processing.
-- **Frontend:** To be decided (consider using frameworks such as React or Vue.js for dynamic UI).
-- **Database:** To be decided (consider using databases such as MongoDB or PostgreSQL for storing historical data).
+- **Frontend:** *To be decided*
+- **Database:** *To be decided*
 - **APIs:** Integration with various APIs to fetch historical data.
 
 ## Installation
