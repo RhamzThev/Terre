@@ -8,10 +8,12 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "vite": "^5.3.4"
-  },
   "dependencies": {
-    "three": "^0.167.1"
+    "three": "^0.167.1",
+    "vue": "^3.4.37"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.2",
+    "vite": "^5.4.1"
   }
 }

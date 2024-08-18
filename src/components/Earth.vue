@@ -1,0 +1,209 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, EquirectangularReflectionMapping, Vector3, PointLight, SphereGeometry, ShaderMaterial, GLSL3, Mesh, MeshStandardMaterial, AdditiveBlending } from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+
+
+const earth = ref();
+
+// declarations
+const scene = new Scene();
+
+const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1);
+camera.position.setZ(30);
+
+const renderer = new WebGLRenderer();
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+// texture loader
+const loader = new TextureLoader();
+
+// galaxy
+const milkyWay = loader.load("/milky_way.jpg");
+milkyWay.mapping = EquirectangularReflectionMapping;
+
+scene.background = milkyWay
+
+// sun
+const ADJACENT_LENGTH = 60
+const OPPOSITE_LENGTH = ADJACENT_LENGTH * Math.tan(0.4101524)
+const SUN_POSITION = new Vector3(0, OPPOSITE_LENGTH, ADJACENT_LENGTH);
+
+const sunLight = new PointLight(0xffffff, 1000);
+sunLight.position.copy(SUN_POSITION);
+
+scene.add(sunLight);
+
+//#region earth
+
+const earthGeometry = new SphereGeometry(15, 64, 32);
+
+// globe
+const eartDayhMap = loader.load('/earth_day.jpg');
+const earthNightMap = loader.load("/earth_night.jpg");
+
+const earthVertexShader = `
+out vec4 vPosition;
+out vec2 vUV;
+
+void main() {
+  vPosition = modelMatrix * vec4(position, 1.0);
+  vUV = uv;
+
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+`;
+const earthFragmentShader = `
+uniform sampler2D dayTexture;
+uniform sampler2D nightTexture;
+uniform vec3 lightPosition;
+
+in vec4 vPosition;
+in vec2 vUV;
+
+layout(location = 0) out vec4 FragColor;
+
+void main() {
+  vec3 light = normalize(lightPosition);
+  vec4 position = normalize(vPosition);
+
+  float intensity = max(dot(position, vec4(light, 1.0)),0.33);
+
+  vec4 dayColor = texture2D(dayTexture, vUV);
+  vec4 nightColor = texture2D(nightTexture, vUV);
+
+  FragColor = mix(nightColor, dayColor, intensity);
+}
+`;
+
+const earthMaterial = new ShaderMaterial({
+  uniforms: {
+    dayTexture: { value: eartDayhMap },
+    nightTexture: { value: earthNightMap },
+    lightPosition: { value: sunLight.position },
+  },
+  vertexShader: earthVertexShader,
+  fragmentShader: earthFragmentShader,
+  glslVersion: GLSL3,
+});
+
+const earthMesh = new Mesh(earthGeometry, earthMaterial);
+
+scene.add(earthMesh)
+
+// clouds
+const earthCloudsMap = loader.load("/earth_clouds.jpg");
+
+const earthCloudsMaterial = new MeshStandardMaterial({
+  map: earthCloudsMap,
+  blending: AdditiveBlending,
+  alphaMap: earthCloudsMap,
+})
+
+const earthCloudsMesh = new Mesh(earthGeometry, earthCloudsMaterial);
+earthCloudsMesh.scale.setScalar(1.005)
+
+scene.add(earthCloudsMesh)
+
+// glow
+const earthGlowVertexShader = `
+out vec3 vPosition;
+out vec3 vNormal;
+out vec2 vUV;
+
+void main() {
+  vPosition = position;
+  vNormal = normal;
+  vUV = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+`;
+const earthGlowFragmentShader = `
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vUV;
+
+layout(location = 0) out vec4 FragColor;
+
+void main() {
+  vec3 camera = normalize(cameraPosition);
+  float intensity = 1.01 - dot(vNormal, camera);
+  vec3 atmosphere = vec3(0,0.25,0.5) * pow(intensity, 1.1);
+
+  FragColor = vec4(atmosphere, 1);
+}
+`;
+
+const earthGlowMaterial = new ShaderMaterial({
+  vertexShader: earthGlowVertexShader,
+  fragmentShader: earthGlowFragmentShader,
+  glslVersion: GLSL3,
+  blending: AdditiveBlending,
+});
+
+const earthGlowMesh = new Mesh(earthGeometry, earthGlowMaterial);
+earthGlowMesh.scale.setScalar(1.01);
+
+scene.add(earthGlowMesh);
+
+//#endregion
+
+// listeners
+window.addEventListener('resize', onWindowResize, false);
+
+function onWindowResize() {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+}
+
+// orbit controls
+const controls = new OrbitControls(camera, renderer.domElement);
+let rotationSpeed = 0.0005;
+let currentRotationSpeed = rotationSpeed;
+let targetRotationSpeed = rotationSpeed;
+let interactionTimeout;
+
+function onInteractionStart() {
+  // Smoothly slow down the rotation when user starts interacting
+  targetRotationSpeed = 0;
+  clearTimeout(interactionTimeout);
+}
+
+function onInteractionEnd() {
+  // Smoothly resume rotation after 2 seconds of no interaction
+  interactionTimeout = setTimeout(() => {
+    targetRotationSpeed = rotationSpeed;
+  }, 10 * 1000);
+}
+
+controls.addEventListener('start', onInteractionStart);
+controls.addEventListener('end', onInteractionEnd);
+
+// main
+function animate() {
+  requestAnimationFrame(animate);
+
+  controls.update();
+
+  currentRotationSpeed += (targetRotationSpeed - currentRotationSpeed) * 0.025;
+
+  earthCloudsMesh.rotateY(currentRotationSpeed * 1.5);
+  earthMesh.rotateY(currentRotationSpeed);
+
+  renderer.render(scene, camera);
+}
+
+onMounted(() => {
+  earth.value.appendChild(renderer.domElement);
+  animate();
+})
+</script>
+
+<template>
+  <div ref="earth"></div>
+</template>
+
+<style scoped></style>
