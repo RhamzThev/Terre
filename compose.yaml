@@ -8,9 +8,11 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  server:
+  client:
+    # image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY_CLIENT}:latest
     build:
-      context: .
+      context: ./client
+      dockerfile: Dockerfile
     ports:
       - 80:80
 
