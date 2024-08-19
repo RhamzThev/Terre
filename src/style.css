@@ -1,3 +1,25 @@
+:root {
+    --fore: #E0C9A6;
+    --back: black;
+}
+
 body {
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 400;
+    font-style: normal;
+
     margin: 0;
+    color: var(--fore);
+}
+
+input,
+textarea,
+button {
+    font-family: inherit;
+}
+
+button {
+    color: black;
+    background-color: var(--fore);
+    border: 0;
 }
