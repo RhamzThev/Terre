@@ -14,7 +14,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - 80:80
+      - 443:443
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
