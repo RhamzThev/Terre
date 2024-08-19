@@ -14,8 +14,7 @@ const popup = ref(true);
         <div v-if="popup" class="outer-paper">
             <div class="inner-paper">
                 <h1 class="title">Welcome to Terre</h1>
-                <p class="subtitle">This project is a work in progress
-                    so enjoy this depiction of Earth in the meantime.</p>
+                <p class="subtitle">This project is a work in progress. Closing this popup will showcase an interactive depiction of Earth.</p>
                 <button @click="popup = false" class="close">Close</button>
             </div>
         </div>
@@ -44,10 +43,10 @@ const popup = ref(true);
     mask-repeat: no-repeat;
 
     background-color: black;
-    mask-image: url("./paper.png");
+    mask-image: url("../../public/paper.svg");
 
-    width: 40%;
-    height: 50%;
+    width: 50vw;
+    height: 35vw;
 
     display: flex;
 
@@ -57,9 +56,9 @@ const popup = ref(true);
 }
 
 .inner-paper {
-    width: 85%;
-    height: 80%;
-    border: 0.5rem solid var(--fore);
+    width: 40vw;
+    height:25vw;
+    border: 0.75vw solid var(--fore);
     text-align: center;
 
     display: flex;
@@ -69,18 +68,18 @@ const popup = ref(true);
     justify-content: center;}
 
 .title {
-    font-size: 75px;
+    font-size: 4vw;
     margin: 0;
 }
 
 .subtitle {
-    font-size: 37.5px;
-    width: 75%;
+    font-size: 2vw;
+    width: 30vw;
 }
 
 .close {
-    font-size: 37.5px;
-    padding: 5px 20px;
+    font-size: 2vw;
+    padding: 1vw 4vw;
     transition: 0.25s ease;
 }
 

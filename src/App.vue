@@ -13,7 +13,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <transition name="fade">
+  <transition name="overlay-fade">
     <div id="overlay" v-if="showOverlay"></div>
   </transition>
   <WIP />
@@ -31,10 +31,10 @@ onMounted(() => {
   z-index: 9999;
 }
 
-.fade-enter-active, .fade-leave-active {
+.overlay-fade-enter-active, .overlay-fade-leave-active {
   transition: opacity 3s ease;
 }
-.fade-enter, .fade-leave-to {
+.overlay-fade-enter, .overlay-fade-leave-to {
   opacity: 0;
 }
 </style>
