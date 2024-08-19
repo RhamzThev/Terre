@@ -11,27 +11,28 @@ Terre is an interactive, time-traveling application that allows users to explore
 
 ## Tech Stack
 
-- **Backend:** Node.js - Handles server-side logic and data processing.
-- **Frontend:** *To be decided*
-- **Database:** *To be decided*
-- **APIs:** Integration with various APIs to fetch historical data.
+- **Frontend:** Vue + Vite - Provides an interactive and fast user interface.
+- **Backend:** TBD
+- **Database:** TBD
+- **APIs:** TBD
+- **Package Manager:** pnpm - Ensures efficient and consistent dependency management.
 
 ## Installation
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/terre.git
-   cd terre
+   git clone https://github.com/RhamzThev/Terre.git
+   cd Terre
    ```
 
 2. **Install Dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Run the Application:**
    ```bash
-   npm start
+   pnpm run dev
    ```
 
 ## Usage
