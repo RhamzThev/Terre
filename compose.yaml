@@ -10,7 +10,7 @@
 
 services:
   client:
-    # image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY_CLIENT}:latest
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY_CLIENT}:latest
     build:
       context: ./client
       dockerfile: Dockerfile
