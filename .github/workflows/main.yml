@@ -57,4 +57,4 @@ jobs:
             sudo docker compose pull
 
             # Start the containers using Docker Compose
-            docker compose run --rm -v /etc/letsencrypt/live/:/etc/nginx/ssl -p 443:443 -p 80:80 client
+            sudo docker compose run --rm -v /etc/letsencrypt/live/:/etc/nginx/ssl -p 443:443 -p 80:80 client
