@@ -184,7 +184,7 @@ controls.addEventListener('end', onInteractionEnd);
 
 // main
 function animate() {
-  requestAnimationFrame(animate);
+    setTimeout(() => requestAnimationFrame( animate ), 1000 / 30 );
 
   controls.update();
 
