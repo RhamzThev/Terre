@@ -1,4 +1,4 @@
-# Terre 🌍
+# Terre
 
 Terre is an interactive, time-traveling application that allows users to explore historical events across the globe. With a user-friendly interface, users can navigate to specific time periods and geographic locations to discover significant events, cultural milestones, and historical data.
 
