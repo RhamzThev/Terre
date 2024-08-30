@@ -57,4 +57,7 @@ jobs:
             sudo docker compose pull
 
             # Start the containers using Docker Compose
+
+            sudo ls -l /etc/letsencrypt/live/terre.rhamzthev.com/
+
             sudo docker compose run --rm -v /etc/letsencrypt/live/terre.rhamzthev.com/:/etc/nginx/ssl -p 443:443 -p 80:80 client
