@@ -51,13 +51,11 @@ jobs:
             sudo docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_ACCESS_TOKEN
 
             # Stop and remove the previous Docker session
-            sudo docker compose down
+            sudo docker stop $(sudo docker ps -q --filter "name=client")
             
             # Pull the latest images
             sudo docker compose pull
 
             # Start the containers using Docker Compose
-
-            sudo ls -l /etc/letsencrypt/live/terre.rhamzthev.com/
 
             sudo docker compose run -d --rm -v "/etc/letsencrypt:/etc/letsencrypt" -p 443:443 -p 80:80 client
