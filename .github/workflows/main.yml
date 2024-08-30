@@ -60,4 +60,4 @@ jobs:
 
             sudo ls -l /etc/letsencrypt/live/terre.rhamzthev.com/
 
-            sudo docker compose run -i --rm -v "/etc/letsencrypt:/etc/letsencrypt" -p 443:443 -p 80:80 client
+            sudo docker compose run -d --rm -v "/etc/letsencrypt:/etc/letsencrypt" -p 443:443 -p 80:80 client
