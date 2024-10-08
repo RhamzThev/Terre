@@ -1,11 +1,18 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, EquirectangularReflectionMapping, Vector3, PointLight, SphereGeometry, ShaderMaterial, GLSL3, Mesh, MeshStandardMaterial, AdditiveBlending } from 'three';
+import { ref, onMounted, watch } from 'vue';
+import { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, EquirectangularReflectionMapping, Vector3, PointLight, SphereGeometry, ShaderMaterial, GLSL3, Mesh, MeshStandardMaterial, AdditiveBlending, Group, MeshBasicMaterial } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-
+/***
+ * HEY RHAMSEZ, THIS IS YOUR REMINDER
+ * X = left and right
+ * Y = up and down
+ * Z = forward and back
+ */
 
 const earth = ref();
+
+const radians = (degrees) => degrees * (Math.PI / 180)
 
 // declarations
 const scene = new Scene();
@@ -20,6 +27,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 // texture loader
 const loader = new TextureLoader();
 
+//#region Not Earth
 // galaxy
 const milkyWay = loader.load("/milky_way.jpg");
 milkyWay.mapping = EquirectangularReflectionMapping;
@@ -35,10 +43,14 @@ const sunLight = new PointLight(0xffffff, 1000);
 sunLight.position.copy(SUN_POSITION);
 
 scene.add(sunLight);
+//#endregion
 
-//#region earth
+//#region Earth
+const earthGroup = new Group();
 
-const earthGeometry = new SphereGeometry(15, 64, 32);
+const RADIUS = 15
+
+const earthGeometry = new SphereGeometry(RADIUS, 64, 32);
 
 // globe
 const eartDayhMap = loader.load('/earth_day.jpg');
@@ -91,7 +103,7 @@ const earthMaterial = new ShaderMaterial({
 
 const earthMesh = new Mesh(earthGeometry, earthMaterial);
 
-scene.add(earthMesh)
+earthGroup.add(earthMesh);
 
 // clouds
 const earthCloudsMap = loader.load("/earth_clouds.jpg");
@@ -100,57 +112,59 @@ const earthCloudsMaterial = new MeshStandardMaterial({
   map: earthCloudsMap,
   blending: AdditiveBlending,
   alphaMap: earthCloudsMap,
-})
-
-const earthCloudsMesh = new Mesh(earthGeometry, earthCloudsMaterial);
-earthCloudsMesh.scale.setScalar(1.005)
-
-scene.add(earthCloudsMesh)
-
-// glow
-const earthGlowVertexShader = `
-out vec3 vPosition;
-out vec3 vNormal;
-out vec2 vUV;
-
-void main() {
-  vPosition = position;
-  vNormal = normal;
-  vUV = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-}
-`;
-const earthGlowFragmentShader = `
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vUV;
-
-layout(location = 0) out vec4 FragColor;
-
-void main() {
-  vec3 camera = normalize(cameraPosition);
-  float intensity = 1.01 - dot(vNormal, camera);
-  vec3 atmosphere = vec3(0,0.25,0.5) * pow(intensity, 1.1);
-
-  FragColor = vec4(atmosphere, 1);
-}
-`;
-
-const earthGlowMaterial = new ShaderMaterial({
-  vertexShader: earthGlowVertexShader,
-  fragmentShader: earthGlowFragmentShader,
-  glslVersion: GLSL3,
-  blending: AdditiveBlending,
 });
 
-const earthGlowMesh = new Mesh(earthGeometry, earthGlowMaterial);
-earthGlowMesh.scale.setScalar(1.01);
+const earthCloudsMesh = new Mesh(earthGeometry, earthCloudsMaterial);
+earthCloudsMesh.scale.setScalar(1.005);
 
-scene.add(earthGlowMesh);
+earthGroup.add(earthCloudsMesh);
 
+// coordinates
+const coordGroup = new Group();
+
+/**
+ * 
+ * @param latitude vertical coordinates
+ * @param longitude horizontal coordinates
+ */
+function getCoordinateLocation (latitude, longitude) {
+  const z = RADIUS * Math.cos(radians(latitude)) * Math.cos(radians(longitude + 90))
+  const x = RADIUS * Math.cos(radians(latitude)) * Math.sin(radians(longitude + 90))
+  const y = RADIUS * Math.sin(radians(latitude))
+
+  return { x,y,z };
+}
+
+const coordGeometry = new SphereGeometry(0.125, 64, 32);
+const coordMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
+
+// on new input, add new coordinates
+const updateEvents = (events) => {
+  if (events) {
+    coordGroup.clear();
+
+    events.map((e) => {
+      const lat = parseFloat(e["lat"]["value"])
+      const lon = parseFloat(e["lon"]["value"])
+
+      const coord = getCoordinateLocation(lat, lon);
+
+      const coordMesh = new Mesh(coordGeometry, coordMaterial);
+
+      const coordPosition = new Vector3(coord.x, coord.y, coord.z);
+      coordMesh.position.copy(coordPosition);
+
+      coordGroup.add(coordMesh);
+
+    })
+  }
+};
+
+earthGroup.add(coordGroup);
+scene.add(earthGroup);
 //#endregion
 
-// listeners
+//#region Three.js Events
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize() {
@@ -181,8 +195,9 @@ function onInteractionEnd() {
 
 controls.addEventListener('start', onInteractionStart);
 controls.addEventListener('end', onInteractionEnd);
+//#endregion
 
-// main
+//#region Main loop
 function animate() {
     setTimeout(() => requestAnimationFrame( animate ), 1000 / 30 );
 
@@ -190,16 +205,31 @@ function animate() {
 
   currentRotationSpeed += (targetRotationSpeed - currentRotationSpeed) * 0.025;
 
-  earthCloudsMesh.rotateY(currentRotationSpeed * 1.5);
-  earthMesh.rotateY(currentRotationSpeed);
+  earthCloudsMesh.rotateY(currentRotationSpeed / 1.5);
+  earthGroup.rotateY(currentRotationSpeed);
 
   renderer.render(scene, camera);
 }
+//#endregion
+
+//#region Vue Stuff
+
+// Watch for prop changes and update the scene accordingly
+const props = defineProps(['scene-data'])
+
+watch(() => props.sceneData, (newData) => {
+  if (newData) {
+    const jsonData = JSON.parse(JSON.stringify(newData));
+    console.log(jsonData);
+    updateEvents(jsonData);
+  }
+});
 
 onMounted(() => {
   earth.value.appendChild(renderer.domElement);
   animate();
 })
+//#endregion
 </script>
 
 <template>

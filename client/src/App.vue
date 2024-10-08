@@ -1,23 +1,30 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import Earth from './components/Earth.vue'
-import WIP from './components/WIP.vue'
+import UI from './components/UI.vue'
 
 const showOverlay = ref(true);
+const emit = defineEmits(['data']);
 
 onMounted(() => {
   setTimeout(() => {
     showOverlay.value = false;
   }, 1000)
 })
+
+const eventData = ref(null);
+
+const handleData = (data) => {
+  eventData.value = data;
+}
 </script>
 
 <template>
   <transition name="overlay-fade">
     <div id="overlay" v-if="showOverlay"></div>
   </transition>
-  <WIP />
-  <Earth />
+  <UI @update-scene="handleData" :emit="emit"/>
+  <Earth :scene-data="eventData"/>
 </template>
 
 <style scoped>
