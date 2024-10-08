@@ -34,6 +34,7 @@ const popup = ref(true);
 
 .outer-paper {
     position: absolute;
+    border-radius: 25px;
 
     top: 50%;
     left: 50%;
@@ -43,7 +44,6 @@ const popup = ref(true);
     mask-repeat: no-repeat;
 
     background-color: black;
-    mask-image: url("../../public/paper.svg");
 
     width: 50vw;
     height: 35vw;
@@ -56,8 +56,10 @@ const popup = ref(true);
 }
 
 .inner-paper {
-    width: 40vw;
-    height:25vw;
+    width: 45vw;
+    height:30vw;
+    border-radius: 10px;
+
     border: 0.75vw solid var(--fore);
     text-align: center;
 
