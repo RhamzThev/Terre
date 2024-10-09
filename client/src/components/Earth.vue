@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, EquirectangularReflectionMapping, Vector3, PointLight, SphereGeometry, ShaderMaterial, GLSL3, Mesh, MeshStandardMaterial, AdditiveBlending, Group, MeshBasicMaterial } from 'three';
+import { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, EquirectangularReflectionMapping, Vector3, PointLight, SphereGeometry, ShaderMaterial, GLSL3, Mesh, MeshStandardMaterial, AdditiveBlending, Group, MeshBasicMaterial, Raycaster, Vector2, Object3D } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 /***
  * HEY RHAMSEZ, THIS IS YOUR REMINDER
@@ -13,6 +14,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const earth = ref();
 
 const radians = (degrees) => degrees * (Math.PI / 180)
+
+const raycaster = new Raycaster();
+const pointer = new Vector2();
 
 // declarations
 const scene = new Scene();
@@ -135,28 +139,53 @@ function getCoordinateLocation (latitude, longitude) {
   return { x,y,z };
 }
 
-const coordGeometry = new SphereGeometry(0.125, 64, 32);
-const coordMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
+const COORD_RADIUS = 0.125
+const coordGeometry = new SphereGeometry(COORD_RADIUS, 64, 32);
+
+let coordContent = {};
 
 // on new input, add new coordinates
 const updateEvents = (events) => {
+
   if (events) {
     coordGroup.clear();
+    coordContent = {};
 
     events.map((e) => {
-      const lat = parseFloat(e["lat"]["value"])
-      const lon = parseFloat(e["lon"]["value"])
+      const lat = parseInt(e["lat"]["value"])
+      const lon = parseInt(e["lon"]["value"])
+      const coordString = `${lat}-${lon}`
 
-      const coord = getCoordinateLocation(lat, lon);
+      const name = e["eventLabel"]["value"];
 
-      const coordMesh = new Mesh(coordGeometry, coordMaterial);
+      if (!(coordString in coordContent)) {
+        // create new point, add name to stuff
+        coordContent[coordString] = [name]
 
-      const coordPosition = new Vector3(coord.x, coord.y, coord.z);
-      coordMesh.position.copy(coordPosition);
+        const coord = getCoordinateLocation(lat, lon);
+        const coordMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
+        const coordMesh = new Mesh(coordGeometry, coordMaterial);
 
-      coordGroup.add(coordMesh);
+        coordMesh.name = coordString;
 
+        const coordPosition = new Vector3(coord.x, coord.y, coord.z);
+        coordMesh.position.copy(coordPosition);
+        coordGroup.add(coordMesh);
+
+        // create label
+        const coordDiv = document.createElement('div');
+        coordDiv.setAttribute("id", coordString);
+
+        const coordLabel =  new CSS2DObject(coordDiv);
+        coordLabel.position.set(0, 1.5 * COORD_RADIUS, 1.5 * COORD_RADIUS);
+        coordLabel.center.set( 0, 0 );
+				coordMesh.add(coordLabel);
+
+      } else {
+        coordContent[coordString].push(name);
+      }
     })
+
   }
 };
 
@@ -165,13 +194,29 @@ scene.add(earthGroup);
 //#endregion
 
 //#region Three.js Events
+document.addEventListener("mousemove", onPointerMove);
+
+function onPointerMove( event ) {
+  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+
 window.addEventListener('resize', onWindowResize, false);
 
 function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.setSize( window.innerWidth, window.innerHeight );
+
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 }
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize( window.innerWidth, window.innerHeight );
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild( labelRenderer.domElement );
 
 // orbit controls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -198,6 +243,8 @@ controls.addEventListener('end', onInteractionEnd);
 //#endregion
 
 //#region Main loop
+let INTERSECTED;
+
 function animate() {
     setTimeout(() => requestAnimationFrame( animate ), 1000 / 30 );
 
@@ -208,7 +255,32 @@ function animate() {
   earthCloudsMesh.rotateY(currentRotationSpeed / 1.5);
   earthGroup.rotateY(currentRotationSpeed);
 
+  raycaster.setFromCamera( pointer, camera );
+  const intersects = raycaster.intersectObjects(coordGroup.children, false);
+
+  if (intersects.length > 0) {
+
+    if (!INTERSECTED) {
+      INTERSECTED = intersects[0].object;
+    } else {
+      if (INTERSECTED != intersects[0].object) {
+        INTERSECTED.material.color.setHex( 0xff0000 );
+        INTERSECTED = intersects[0].object;
+      }
+    }
+    
+    INTERSECTED.children[0].element.textContent = coordContent[INTERSECTED.name].join(", ");
+    INTERSECTED.material.color.setHex( 0xffffff );
+
+  } else {
+    if (INTERSECTED) {
+      INTERSECTED.children[0].element.textContent = "";
+      INTERSECTED.material.color.setHex( 0xff0000 );
+    }
+  }
+
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
 }
 //#endregion
 
@@ -220,7 +292,6 @@ const props = defineProps(['scene-data'])
 watch(() => props.sceneData, (newData) => {
   if (newData) {
     const jsonData = JSON.parse(JSON.stringify(newData));
-    console.log(jsonData);
     updateEvents(jsonData);
   }
 });
