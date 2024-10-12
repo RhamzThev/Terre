@@ -4,7 +4,7 @@ import Earth from './components/Earth.vue'
 import UI from './components/UI.vue'
 
 const showOverlay = ref(true);
-const emit = defineEmits(['data']);
+// const emit = defineEmits(['data']);
 
 onMounted(() => {
   setTimeout(() => {

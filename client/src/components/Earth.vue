@@ -139,7 +139,7 @@ function getCoordinateLocation (latitude, longitude) {
   return { x,y,z };
 }
 
-const COORD_RADIUS = 0.125
+const COORD_RADIUS = 0.1
 const coordGeometry = new SphereGeometry(COORD_RADIUS, 64, 32);
 
 let coordContent = {};
@@ -174,11 +174,17 @@ const updateEvents = (events) => {
 
         // create label
         const coordDiv = document.createElement('div');
-        coordDiv.setAttribute("id", coordString);
+        coordDiv.className = coordString;
+        coordDiv.style.backgroundColor = "rgba(0,0,0,0.75)";
+        coordDiv.style.borderRadius = "20px";
+        coordDiv.style.padding = "10px 20px";
 
-        const coordLabel =  new CSS2DObject(coordDiv);
-        coordLabel.position.set(0, 1.5 * COORD_RADIUS, 1.5 * COORD_RADIUS);
+        const coordLabel = new CSS2DObject(coordDiv);
+        coordLabel.position.set(0, 0, 0);
         coordLabel.center.set( 0, 0 );
+
+        coordLabel.visible = false;
+
 				coordMesh.add(coordLabel);
 
       } else {
@@ -186,6 +192,16 @@ const updateEvents = (events) => {
       }
     })
 
+    for (const name in coordContent) {
+      const obj = coordGroup.getObjectByName(name);
+      console.log(obj);
+      coordContent[name].map((e) => {
+        const eventLabel = document.createElement("h3");
+        eventLabel.textContent = e;
+
+        obj.children[0].element.appendChild(eventLabel);
+      })
+    }
   }
 };
 
@@ -243,8 +259,6 @@ controls.addEventListener('end', onInteractionEnd);
 //#endregion
 
 //#region Main loop
-let INTERSECTED;
-
 function animate() {
     setTimeout(() => requestAnimationFrame( animate ), 1000 / 30 );
 
@@ -258,26 +272,15 @@ function animate() {
   raycaster.setFromCamera( pointer, camera );
   const intersects = raycaster.intersectObjects(coordGroup.children, false);
 
-  if (intersects.length > 0) {
-
-    if (!INTERSECTED) {
-      INTERSECTED = intersects[0].object;
+  coordGroup.children.map((child) => {
+    if (intersects.some((i) => i.object.id === child.id)) {
+      child.children[0].visible = true;
+      child.material.color.setHex( 0xffffff );
     } else {
-      if (INTERSECTED != intersects[0].object) {
-        INTERSECTED.material.color.setHex( 0xff0000 );
-        INTERSECTED = intersects[0].object;
-      }
+      child.children[0].visible = false;
+      child.material.color.setHex( 0xff0000 );
     }
-    
-    INTERSECTED.children[0].element.textContent = coordContent[INTERSECTED.name].join(", ");
-    INTERSECTED.material.color.setHex( 0xffffff );
-
-  } else {
-    if (INTERSECTED) {
-      INTERSECTED.children[0].element.textContent = "";
-      INTERSECTED.material.color.setHex( 0xff0000 );
-    }
-  }
+  })
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
@@ -307,4 +310,5 @@ onMounted(() => {
   <div ref="earth"></div>
 </template>
 
-<style scoped></style>
+<style scoped>
+</style>
