@@ -12,9 +12,8 @@ Terre is an interactive, time-traveling application that allows users to explore
 ## Tech Stack
 
 - **Frontend:** Vue + Vite - Provides an interactive and fast user interface.
-- **Backend:** TBD
-- **Database:** TBD
-- **APIs:** TBD
+- **Backend:** Python Flask
+- **APIs:** Wikidata API
 - **Package Manager:** pnpm - Ensures efficient and consistent dependency management.
 
 ## Installation
