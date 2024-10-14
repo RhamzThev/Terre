@@ -1,5 +1,7 @@
 # Terre
 
+https://github.com/user-attachments/assets/512cb23b-2c58-4300-aa63-e3b4b2cf7b34
+
 Terre is an interactive, time-traveling application that allows users to explore historical events across the globe. With a user-friendly interface, users can navigate to specific time periods and geographic locations to discover significant events, cultural milestones, and historical data.
 
 ## Features
